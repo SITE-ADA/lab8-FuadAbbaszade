@@ -14,7 +14,6 @@ import az.edu.ada.wm2.courseservice.model.dto.CourseResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.CoursesByStudentNameResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseStudentsResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrolledStudentDto;
-import az.edu.ada.wm2.courseservice.model.dto.EnrollmentStatusUpdateRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrollmentResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.StudentCoursesResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.StudentDto;
@@ -106,24 +105,16 @@ public class CourseService {
                 .build();
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
 
-        return toEnrollmentResponseDto(savedEnrollment);
+        return toEnrollmentResponseDto(savedEnrollment, "Student enrolled successfully.");
     }
 
-    public EnrollmentResponseDto updateEnrollmentStatus(Long courseId, Long studentId, EnrollmentStatusUpdateRequestDto requestDto) {
+    public EnrollmentResponseDto updateEnrollmentStatus(Long courseId, Long studentId, EnrollmentStatus status) {
         Enrollment enrollment = enrollmentRepository.findByCourseIdAndStudentId(courseId, studentId)
                 .orElseThrow(() -> new EnrollmentNotFoundException(courseId, studentId));
 
-        enrollment.setStatus(requestDto.getStatus());
+        enrollment.setStatus(status);
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-
-        return new EnrollmentResponseDto(
-                savedEnrollment.getId(),
-                savedEnrollment.getCourseId(),
-                savedEnrollment.getStudentId(),
-                savedEnrollment.getEnrollmentDate(),
-                savedEnrollment.getStatus().name(),
-                "Enrollment status updated successfully."
-        );
+        return toEnrollmentResponseDto(savedEnrollment, "Enrollment status updated successfully.");
     }
 
     public CourseStudentsResponseDto getCourseStudents(Long courseId) {
@@ -258,14 +249,14 @@ public class CourseService {
         );
     }
 
-    private EnrollmentResponseDto toEnrollmentResponseDto(Enrollment enrollment) {
+    private EnrollmentResponseDto toEnrollmentResponseDto(Enrollment enrollment, String message) {
         return new EnrollmentResponseDto(
                 enrollment.getId(),
                 enrollment.getCourseId(),
                 enrollment.getStudentId(),
                 enrollment.getEnrollmentDate(),
                 enrollment.getStatus().name(),
-                "Student enrolled successfully."
+                message
         );
     }
 

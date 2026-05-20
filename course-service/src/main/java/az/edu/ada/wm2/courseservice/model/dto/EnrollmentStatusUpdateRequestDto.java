@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class EnrollmentStatusUpdateRequestDto {
 
-    @Schema(description = "New enrollment status", example = "COMPLETED")
+    @Schema(description = "Qeydiyyat üçün yeni status", example = "COMPLETED")
     @NotNull(message = "Status is required")
     private EnrollmentStatus status;
 }

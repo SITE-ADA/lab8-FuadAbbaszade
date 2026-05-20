@@ -13,21 +13,21 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CourseEnrollmentSummaryDto {
 
-    @Schema(description = "Course id", example = "1")
+    @Schema(description = "Fennin identifikatoru", example = "1")
     private Long courseId;
 
-    @Schema(description = "Course title", example = "Data Structures")
+    @Schema(description = "Fennin adi", example = "Data Structures")
     private String title;
 
-    @Schema(description = "Course code", example = "CS201")
+    @Schema(description = "Fennin kodu", example = "CS201")
     private String code;
 
-    @Schema(description = "Credit count", example = "4")
+    @Schema(description = "Kredit sayı", example = "4")
     private Integer credits;
 
-    @Schema(description = "Enrollment date", example = "2026-05-20")
+    @Schema(description = "Qeydiyyat tarixi", example = "2026-05-20")
     private LocalDate enrollmentDate;
 
-    @Schema(description = "Enrollment status", example = "ACTIVE")
+    @Schema(description = "Qeydiyyat statusu", example = "ACTIVE")
     private String status;
 }

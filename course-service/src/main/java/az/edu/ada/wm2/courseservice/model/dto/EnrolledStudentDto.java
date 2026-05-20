@@ -13,24 +13,24 @@ import lombok.Setter;
 @AllArgsConstructor
 public class EnrolledStudentDto {
 
-    @Schema(description = "Student id", example = "15")
+    @Schema(description = "Tələbənin identifikatoru", example = "15")
     private Long id;
 
-    @Schema(description = "Student first name", example = "Nicat")
+    @Schema(description = "Tələbənin adı", example = "Nicat")
     private String firstName;
 
-    @Schema(description = "Student last name", example = "Aliyev")
+    @Schema(description = "Tələbənin soyadı", example = "Aliyev")
     private String lastName;
 
-    @Schema(description = "Student email", example = "nicat.aliyev@example.com")
+    @Schema(description = "Tələbənin elektron poçtu", example = "nicat.aliyev@example.com")
     private String email;
 
-    @Schema(description = "Student age", example = "20")
+    @Schema(description = "Tələbənin yaşı", example = "20")
     private Integer age;
 
-    @Schema(description = "Enrollment date", example = "2026-05-20")
+    @Schema(description = "Qeydiyyat tarixi", example = "2026-05-20")
     private LocalDate enrollmentDate;
 
-    @Schema(description = "Enrollment status", example = "ACTIVE")
+    @Schema(description = "Qeydiyyat statusu", example = "ACTIVE")
     private String status;
 }

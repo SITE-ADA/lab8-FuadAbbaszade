@@ -13,9 +13,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class StudentCoursesResponseDto {
 
-    @Schema(description = "Matched student")
+    @Schema(description = "Axtarışa uyğun gələn tələbə məlumatı")
     private StudentDto student;
 
-    @Schema(description = "Courses associated with the matched student")
+    @Schema(description = "Həmin tələbəyə aid fənlər və qeydiyyat məlumatları")
     private List<CourseEnrollmentSummaryDto> courses;
 }

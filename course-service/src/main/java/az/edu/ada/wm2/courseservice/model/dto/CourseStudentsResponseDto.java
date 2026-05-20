@@ -13,12 +13,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CourseStudentsResponseDto {
 
-    @Schema(description = "Course id", example = "1")
+    @Schema(description = "Fennin identifikatoru", example = "1")
     private Long courseId;
 
-    @Schema(description = "Course title", example = "Data Structures")
+    @Schema(description = "Fennin adi", example = "Data Structures")
     private String courseTitle;
 
-    @Schema(description = "Students enrolled in this course with enrollment details")
+    @Schema(description = "Bu fənnə yazılmış tələbələr və onların qeydiyyat məlumatları")
     private List<EnrolledStudentDto> students;
 }

@@ -26,28 +26,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/students")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Students", description = "Student management endpoints")
+@Tag(name = "Students", description = "Tələbələrin idarə olunması üçün endpointlər")
 public class StudentController {
 
     private final StudentService studentService;
 
     @PostMapping
-    @Operation(summary = "Create student", description = "Creates a new student record.")
+    @Operation(summary = "Tələbə yarat", description = "Yeni tələbə qeydi yaradır.")
     public ResponseEntity<StudentResponseDto> createStudent(@Valid @RequestBody StudentRequestDto requestDto) {
         StudentResponseDto createdStudent = studentService.createStudent(requestDto);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
     @GetMapping
-    @Operation(summary = "Get all students", description = "Returns all students.")
+    @Operation(summary = "Bütün tələbələri gətir", description = "Sistemdə olan bütün tələbələri qaytarır.")
     public ResponseEntity<List<StudentResponseDto>> getAllStudents() {
         return ResponseEntity.ok(studentService.getAllStudents());
     }
 
     @GetMapping("/search")
     @Operation(
-            summary = "Search students by name",
-            description = "Searches students by a case-insensitive partial first name or last name match."
+            summary = "Ada görə tələbə axtar",
+            description = "Tələbə adı və ya soyadına görə böyük-kiçik hərfə həssas olmayan qismən axtarış edir."
     )
     public ResponseEntity<List<StudentResponseDto>> searchStudentsByName(
             @RequestParam("name") @NotBlank(message = "Name is required") String name) {
@@ -55,13 +55,13 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get student by id", description = "Returns a single student by id.")
+    @Operation(summary = "Tələbəni id ilə gətir", description = "Verilmiş identifikatora uyğun bir tələbəni qaytarır.")
     public ResponseEntity<StudentResponseDto> getStudentById(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update student", description = "Updates an existing student by id.")
+    @Operation(summary = "Tələbəni yenilə", description = "Verilmiş identifikatora uyğun tələbə məlumatlarını yeniləyir.")
     public ResponseEntity<StudentResponseDto> updateStudent(
             @PathVariable Long id,
             @Valid @RequestBody StudentRequestDto requestDto) {
@@ -69,7 +69,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete student", description = "Deletes a student by id.")
+    @Operation(summary = "Tələbəni sil", description = "Verilmiş identifikatora uyğun tələbəni silir.")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
