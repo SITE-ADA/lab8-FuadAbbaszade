@@ -3,6 +3,7 @@ package az.edu.ada.wm2.courseservice.controller;
 import az.edu.ada.wm2.courseservice.model.dto.CourseRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseStudentsResponseDto;
+import az.edu.ada.wm2.courseservice.model.dto.EnrollmentStatusUpdateRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrollmentResponseDto;
 import az.edu.ada.wm2.courseservice.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -73,6 +75,18 @@ public class CourseController {
             @PathVariable Long studentId) {
         EnrollmentResponseDto responseDto = courseService.enrollStudent(courseId, studentId);
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/{courseId}/students/{studentId}/status")
+    @Operation(
+            summary = "Update enrollment status",
+            description = "Updates the status of an enrollment for a student in a course."
+    )
+    public ResponseEntity<EnrollmentResponseDto> updateEnrollmentStatus(
+            @PathVariable Long courseId,
+            @PathVariable Long studentId,
+            @Valid @RequestBody EnrollmentStatusUpdateRequestDto requestDto) {
+        return ResponseEntity.ok(courseService.updateEnrollmentStatus(courseId, studentId, requestDto));
     }
 
     @GetMapping("/{courseId}/students")

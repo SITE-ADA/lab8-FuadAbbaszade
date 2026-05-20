@@ -25,4 +25,8 @@ public class CourseRequestDto {
     @Schema(description = "Credit count", example = "4")
     @Positive(message = "Credits must be positive")
     private Integer credits;
+
+    @Schema(description = "Prerequisite course id when required", example = "1", nullable = true)
+    @Positive(message = "Prerequisite course id must be positive")
+    private Long prerequisiteCourseId;
 }

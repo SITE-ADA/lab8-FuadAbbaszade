@@ -34,6 +34,27 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(EnrollmentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleEnrollmentNotFound(
+            EnrollmentNotFoundException ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidCoursePrerequisiteException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCoursePrerequisite(
+            InvalidCoursePrerequisiteException ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(PrerequisiteNotSatisfiedException.class)
+    public ResponseEntity<ApiErrorResponse> handlePrerequisiteNotSatisfied(
+            PrerequisiteNotSatisfiedException ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(StudentServiceCommunicationException.class)
     public ResponseEntity<ApiErrorResponse> handleStudentServiceCommunication(
             StudentServiceCommunicationException ex,
