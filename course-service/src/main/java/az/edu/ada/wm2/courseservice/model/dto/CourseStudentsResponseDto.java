@@ -19,6 +19,6 @@ public class CourseStudentsResponseDto {
     @Schema(description = "Course title", example = "Data Structures")
     private String courseTitle;
 
-    @Schema(description = "Students enrolled in this course")
-    private List<StudentDto> students;
+    @Schema(description = "Students enrolled in this course with enrollment details")
+    private List<EnrolledStudentDto> students;
 }

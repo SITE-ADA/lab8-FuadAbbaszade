@@ -8,13 +8,16 @@ import az.edu.ada.wm2.courseservice.exception.StudentServiceCommunicationExcepti
 import az.edu.ada.wm2.courseservice.model.dto.CourseRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseStudentsResponseDto;
+import az.edu.ada.wm2.courseservice.model.dto.EnrolledStudentDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrollmentResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.StudentDto;
 import az.edu.ada.wm2.courseservice.model.entity.Course;
 import az.edu.ada.wm2.courseservice.model.entity.Enrollment;
+import az.edu.ada.wm2.courseservice.model.entity.EnrollmentStatus;
 import az.edu.ada.wm2.courseservice.repository.CourseRepository;
 import az.edu.ada.wm2.courseservice.repository.EnrollmentRepository;
 import feign.FeignException;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,28 +92,21 @@ public class CourseService {
         Enrollment enrollment = Enrollment.builder()
                 .courseId(courseId)
                 .studentId(studentId)
+                .enrollmentDate(LocalDate.now())
+                .status(EnrollmentStatus.ACTIVE)
                 .build();
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
 
-        return new EnrollmentResponseDto(
-                savedEnrollment.getId(),
-                savedEnrollment.getCourseId(),
-                savedEnrollment.getStudentId(),
-                "Student enrolled successfully."
-        );
+        return toEnrollmentResponseDto(savedEnrollment);
     }
 
     public CourseStudentsResponseDto getCourseStudents(Long courseId) {
         log.debug("Fetching students for course {}", courseId);
         Course course = findCourseOrThrow(courseId);
 
-        List<Long> studentIds = enrollmentRepository.findByCourseId(courseId)
+        List<EnrolledStudentDto> students = enrollmentRepository.findByCourseId(courseId)
                 .stream()
-                .map(Enrollment::getStudentId)
-                .toList();
-
-        List<StudentDto> students = studentIds.stream()
-                .map(this::fetchStudentWithRestTemplate)
+                .map(this::toEnrolledStudentDto)
                 .toList();
 
         return new CourseStudentsResponseDto(course.getId(), course.getTitle(), students);
@@ -142,6 +138,30 @@ public class CourseService {
     private Course findCourseOrThrow(Long id) {
         log.debug("Looking up course {}", id);
         return courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException(id));
+    }
+
+    private EnrolledStudentDto toEnrolledStudentDto(Enrollment enrollment) {
+        StudentDto student = fetchStudentWithRestTemplate(enrollment.getStudentId());
+        return new EnrolledStudentDto(
+                student.getId(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getEmail(),
+                student.getAge(),
+                enrollment.getEnrollmentDate(),
+                enrollment.getStatus().name()
+        );
+    }
+
+    private EnrollmentResponseDto toEnrollmentResponseDto(Enrollment enrollment) {
+        return new EnrollmentResponseDto(
+                enrollment.getId(),
+                enrollment.getCourseId(),
+                enrollment.getStudentId(),
+                enrollment.getEnrollmentDate(),
+                enrollment.getStatus().name(),
+                "Student enrolled successfully."
+        );
     }
 
     private CourseResponseDto toCourseResponseDto(Course course) {
