@@ -8,12 +8,15 @@ import az.edu.ada.wm2.courseservice.exception.InvalidCoursePrerequisiteException
 import az.edu.ada.wm2.courseservice.exception.PrerequisiteNotSatisfiedException;
 import az.edu.ada.wm2.courseservice.exception.RemoteStudentNotFoundException;
 import az.edu.ada.wm2.courseservice.exception.StudentServiceCommunicationException;
+import az.edu.ada.wm2.courseservice.model.dto.CourseEnrollmentSummaryDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseResponseDto;
+import az.edu.ada.wm2.courseservice.model.dto.CoursesByStudentNameResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.CourseStudentsResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrolledStudentDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrollmentStatusUpdateRequestDto;
 import az.edu.ada.wm2.courseservice.model.dto.EnrollmentResponseDto;
+import az.edu.ada.wm2.courseservice.model.dto.StudentCoursesResponseDto;
 import az.edu.ada.wm2.courseservice.model.dto.StudentDto;
 import az.edu.ada.wm2.courseservice.model.entity.Course;
 import az.edu.ada.wm2.courseservice.model.entity.Enrollment;
@@ -22,14 +25,14 @@ import az.edu.ada.wm2.courseservice.repository.CourseRepository;
 import az.edu.ada.wm2.courseservice.repository.EnrollmentRepository;
 import feign.FeignException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +42,6 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final StudentFeignClient studentFeignClient;
-    private final RestTemplate restTemplate;
-
-    @Value("${student.service.base-url}")
-    private String studentServiceBaseUrl;
 
     public CourseResponseDto createCourse(CourseRequestDto requestDto) {
         validatePrerequisiteReference(requestDto.getPrerequisiteCourseId(), null);
@@ -139,6 +138,17 @@ public class CourseService {
         return new CourseStudentsResponseDto(course.getId(), course.getTitle(), students);
     }
 
+    public CoursesByStudentNameResponseDto getCoursesByStudentName(String name) {
+        String normalizedName = name.trim();
+        List<StudentDto> matchedStudents = searchStudentsWithFeign(normalizedName);
+
+        List<StudentCoursesResponseDto> results = matchedStudents.stream()
+                .map(this::toStudentCoursesResponseDto)
+                .toList();
+
+        return new CoursesByStudentNameResponseDto(normalizedName, results);
+    }
+
     private void validateStudentWithFeign(Long studentId) {
         try {
             log.debug("Validating student {} via Feign", studentId);
@@ -150,15 +160,14 @@ public class CourseService {
         }
     }
 
-    private StudentDto fetchStudentWithRestTemplate(Long studentId) {
-        String url = studentServiceBaseUrl + "/api/v1/students/" + studentId;
+    private List<StudentDto> searchStudentsWithFeign(String name) {
         try {
-            log.debug("Fetching student {} via RestTemplate", studentId);
-            return restTemplate.getForObject(url, StudentDto.class);
-        } catch (HttpClientErrorException.NotFound ex) {
-            throw new RemoteStudentNotFoundException(studentId);
-        } catch (RestClientException ex) {
-            throw new StudentServiceCommunicationException("Could not fetch student details from student-service.");
+            log.debug("Searching students by name {} via Feign", name);
+            return studentFeignClient.searchStudentsByName(name);
+        } catch (FeignException.BadRequest ex) {
+            throw new StudentServiceCommunicationException("Could not search students due to invalid request.");
+        } catch (FeignException ex) {
+            throw new StudentServiceCommunicationException("Could not search students from student-service.");
         }
     }
 
@@ -196,13 +205,54 @@ public class CourseService {
     }
 
     private EnrolledStudentDto toEnrolledStudentDto(Enrollment enrollment) {
-        StudentDto student = fetchStudentWithRestTemplate(enrollment.getStudentId());
+        StudentDto student = fetchStudentWithFeign(enrollment.getStudentId());
         return new EnrolledStudentDto(
                 student.getId(),
                 student.getFirstName(),
                 student.getLastName(),
                 student.getEmail(),
                 student.getAge(),
+                enrollment.getEnrollmentDate(),
+                enrollment.getStatus().name()
+        );
+    }
+
+    private StudentDto fetchStudentWithFeign(Long studentId) {
+        try {
+            log.debug("Fetching student {} via Feign", studentId);
+            return studentFeignClient.getStudentById(studentId);
+        } catch (FeignException.NotFound ex) {
+            throw new RemoteStudentNotFoundException(studentId);
+        } catch (FeignException ex) {
+            throw new StudentServiceCommunicationException("Could not fetch student details from student-service.");
+        }
+    }
+
+    private StudentCoursesResponseDto toStudentCoursesResponseDto(StudentDto student) {
+        List<Enrollment> enrollments = enrollmentRepository.findByStudentId(student.getId())
+                .stream()
+                .sorted(Comparator.comparing(Enrollment::getEnrollmentDate))
+                .toList();
+
+        Map<Long, Course> coursesById = courseRepository.findAllById(
+                        enrollments.stream().map(Enrollment::getCourseId).distinct().toList())
+                .stream()
+                .collect(Collectors.toMap(Course::getId, Function.identity()));
+
+        List<CourseEnrollmentSummaryDto> courses = enrollments.stream()
+                .map(enrollment -> toCourseEnrollmentSummaryDto(enrollment, coursesById.get(enrollment.getCourseId())))
+                .toList();
+
+        return new StudentCoursesResponseDto(student, courses);
+    }
+
+    private CourseEnrollmentSummaryDto toCourseEnrollmentSummaryDto(Enrollment enrollment, Course course) {
+        Course resolvedCourse = course != null ? course : findCourseOrThrow(enrollment.getCourseId());
+        return new CourseEnrollmentSummaryDto(
+                resolvedCourse.getId(),
+                resolvedCourse.getTitle(),
+                resolvedCourse.getCode(),
+                resolvedCourse.getCredits(),
                 enrollment.getEnrollmentDate(),
                 enrollment.getStatus().name()
         );
